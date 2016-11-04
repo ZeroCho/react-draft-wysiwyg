@@ -9,6 +9,7 @@ import {
   ContentState,
 } from 'draft-js';
 import { Editor } from '../src';
+import draftToMarkdown from '../markdown';
 import styles from './styles.css'; // eslint-disable-line no-unused-vars
 import draft from '../../css/Draft.css'; // eslint-disable-line no-unused-vars
 
@@ -72,8 +73,6 @@ class Playground extends Component {
               wrapperClassName="playground-wrapper"
               editorClassName="playground-editor"
               onChange={this.onEditorChange}
-              rawContentState={rawContentState}
-              toolbarOnFocus
               toolbar={{
                 image: {
                   uploadCallback: this.imageUploadCallBack,
@@ -83,7 +82,7 @@ class Playground extends Component {
           </div>
           <textarea
             className="playground-content no-focus"
-            value={draftToHtml(editorContent)}
+            value={draftToMarkdown(editorContent)}
           />
         </div>
       </div>
