@@ -1,7 +1,7 @@
 /* @flow */
 
 import { ContentState } from 'draft-js';
-import { isEmptyString, forEach } from './common';
+import { isEmptyString, forEach, isList } from './common';
 
 /**
 * Mapping block-type to corresponding markdown symbol.
@@ -14,8 +14,8 @@ const blockTypesMapping: Object = {
   'header-four': '#### ',
   'header-five': '##### ',
   'header-six': '###### ',
-  'unordered-list-item': '+ ', // todo: this will change depending on the depth
-  'ordered-list-item': '1. ', // todo: this will change depending on the depth
+  'unordered-list-item': '- ',
+  'ordered-list-item': '1. ',
   blockquote: '> ',
 };
 
@@ -403,6 +403,14 @@ function getBlockMarkdown(block: Object, entityMap: Object): string {
   return blockMarkdown.join('');
 }
 
+function getDepthPadding(depth: number) {
+  let padding = '';
+  for (let i = 0; i < depth * 4; i += 1) {
+    padding += ' ';
+  }
+  return padding;
+}
+
 /**
 * The function will generate markdown for given draftjs editorContent.
 */
@@ -412,7 +420,11 @@ export default function draftToMarkdown(editorContent: ContentState): string {
     const { blocks, entityMap } = editorContent;
     if (blocks && blocks.length > 0) {
       blocks.forEach((block) => {
-        markdown.push(getBlockMarkdown(block, entityMap));
+        let content = getBlockMarkdown(block, entityMap);
+        if (isList(block.type)) {
+          content = getDepthPadding(block.depth) + content;
+        }
+        markdown.push(content);
       });
     }
   }

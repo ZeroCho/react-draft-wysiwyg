@@ -26,13 +26,9 @@ export function isEmptyString(str: string): boolean {
 /**
 * Function to check if a block is of type list.
 */
-export function isList(block: Object): any {
-  if (block) {
-    const blockType = block.type;
-    return (
-      blockType === 'unordered-list-item' ||
-      blockType === 'ordered-list-item'
-    );
-  }
-  return undefined;
+export function isList(blockType: string): any {
+  return (
+    blockType === 'unordered-list-item' ||
+    blockType === 'ordered-list-item'
+  );
 }
