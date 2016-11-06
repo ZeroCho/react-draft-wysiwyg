@@ -9,7 +9,7 @@ import {
   ContentState,
 } from 'draft-js';
 import { Editor } from '../src';
-import draftToMarkdown from '../markdown';
+import draftToMarkdown from 'draftjs-to-markdown'; // eslint-disable-line import/no-extraneous-dependencies
 import styles from './styles.css'; // eslint-disable-line no-unused-vars
 import draft from '../../css/Draft.css'; // eslint-disable-line no-unused-vars
 
@@ -83,6 +83,10 @@ class Playground extends Component {
           <textarea
             className="playground-content no-focus"
             value={draftToMarkdown(editorContent)}
+          />
+          <textarea
+            className="playground-content no-focus"
+            value={draftToHtml(editorContent)}
           />
         </div>
       </div>
