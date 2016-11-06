@@ -4,7 +4,7 @@ import { ContentState } from 'draft-js';
 import { isEmptyString, forEach } from './common';
 
 /**
-* Mapping object of block to corresponding markdown symbol.
+* Mapping block-type to corresponding markdown symbol.
 */
 const blockTypesMapping: Object = {
   unstyled: '',
@@ -14,16 +14,16 @@ const blockTypesMapping: Object = {
   'header-four': '#### ',
   'header-five': '##### ',
   'header-six': '###### ',
-  'unordered-list-item': '+ ', // todo: this might change depending on the depth
-  'ordered-list-item': '1. ', // todo: this might change depending on the depth
+  'unordered-list-item': '+ ', // todo: this will change depending on the depth
+  'ordered-list-item': '1. ', // todo: this will change depending on the depth
   blockquote: '> ',
 };
 
 /**
 * Function will return markdown symbol for a block.
 */
-export function getBlockTagSymbol(type: string): string {
-  return type && blockTypesMapping[type];
+export function getBlockTagSymbol(block: Object): string {
+  return block.type && blockTypesMapping[block.type];
 }
 
 /**
@@ -51,8 +51,8 @@ function getEntityMarkdown(entityMap: Object, entityKey: number, text: string): 
 }
 
 /**
-* The function returns an array of sections in blocks.
-* Sections will be areas in block which have same entity or no entity applicable to them.
+* The function returns an array of entity sections in blocks.
+* These will be areas in block which have same entity or no entity applicable to them.
 */
 function getEntitySections(entityRanges: Object, blockLength: number): Array<Object> {
   const sections = [];
@@ -86,17 +86,17 @@ function getEntitySections(entityRanges: Object, blockLength: number): Array<Obj
 function getStyleArrayForBlock(block: Object): Object {
   const { text, inlineStyleRanges } = block;
   const inlineStyles = {
-    BOLD: new Array(text.length),
-    ITALIC: new Array(text.length),
-    UNDERLINE: new Array(text.length),
-    STRIKETHROUGH: new Array(text.length),
-    CODE: new Array(text.length),
-    SUPERSCRIPT: new Array(text.length),
-    SUBSCRIPT: new Array(text.length),
     COLOR: new Array(text.length),
     BGCOLOR: new Array(text.length),
     FONTSIZE: new Array(text.length),
     FONTFAMILY: new Array(text.length),
+    SUBSCRIPT: new Array(text.length),
+    SUPERSCRIPT: new Array(text.length),
+    CODE: new Array(text.length),
+    STRIKETHROUGH: new Array(text.length),
+    UNDERLINE: new Array(text.length),
+    ITALIC: new Array(text.length),
+    BOLD: new Array(text.length),
     length: text.length,
   };
   if (inlineStyleRanges && inlineStyleRanges.length > 0) {
@@ -140,8 +140,6 @@ export function sameStyleAsPrevious(
   }
   return sameStyled;
 }
-
-// todo: follow inline styles order at all places.
 
 /**
 * The function will return inline style applicable at some offset within a block.
@@ -225,7 +223,7 @@ function getSectionText(text: Array<string>): string {
     const chars = text.map((ch) => {
       switch (ch) {
         case '\n':
-          return '<br>\n';
+          return '\\s\\s\n';
         case '&':
           return '&amp;';
         case '<':
@@ -242,7 +240,7 @@ function getSectionText(text: Array<string>): string {
 }
 
 /**
-* Function returns html for text depending on inline style tags applicable to it.
+* Function returns markdown for inline style symbols.
 */
 export function addInlineStyleMarkup(style: string, content: string): string {
   if (style === 'BOLD') {
@@ -265,18 +263,18 @@ export function addInlineStyleMarkup(style: string, content: string): string {
 
 /**
 * The method returns markup for section to which inline styles
-* like BOLD, UNDERLINE and ITALIC are applicable.
+* BOLD, UNDERLINE, ITALIC, STRIKETHROUGH, CODE, SUPERSCRIPT, SUBSCRIPT are applicable.
 */
 function getStyleTagSectionMarkdown(styles: string, text: string): string {
-  let content;
+  let content = text;
   forEach(styles, (style, value) => {
-    content = addInlineStyleMarkup(style, text, value);
+    content = addInlineStyleMarkup(style, content, value);
   });
   return content;
 }
 
 /**
-* Function returns html for text depending on inline style tags applicable to it.
+* Function returns html for text applying inline style in styles property in a span.
 */
 export function addStylePropertyMarkdown(styleSection: Object): string {
   const { styles, text } = styleSection;
@@ -302,30 +300,6 @@ export function addStylePropertyMarkdown(styleSection: Object): string {
 }
 
 /**
-* The method returns markup for section to which inline styles
-like color, background-color, font-size are applicable.
-*/
-// function getStyleSectionMarkdown(block: Object, styleSection: Object): string {
-//   const styleTagSections = getStyleSections(
-//     block, ['BOLD', 'ITALIC', 'UNDERLINE', 'STRIKETHROUGH',
-//      'CODE', 'SUPERSCRIPT', 'SUBSCRIPT'], styleSection.start, styleSection.end
-//   );
-//   let styleTagSectionText = '';
-//   styleTagSections.forEach((styleTagSection) => {
-//     styleTagSectionText += getStyleTagSectionMarkup(styleTagSection);
-//   });
-//   styleTagSectionText = addStylePropertyMarkup(styleSection.styles, styleTagSectionText);
-//   return styleTagSectionText;
-//
-//   // const styleSections = getStyleSections(
-//   //   block,
-//   //   ['COLOR', 'FONTSIZE', 'FONTFAMILY'],
-//   //   entitySection.start, entitySection.end
-//   // );
-//   // styleSections.forEach((styleSection) => {
-// }
-
-/**
 * The method returns markdown for an entity section.
 * An entity section is a continuous section in a block
 * to which same entity or no entity is applicable.
@@ -347,8 +321,8 @@ function getEntitySectionMarkdown(block: Object, entityMap: Object, entitySectio
       styleSection.end
     );
     let stylePropertySectionText = '';
-    stylePropertySections.forEach((section) => {
-      stylePropertySectionText += addStylePropertyMarkdown(section);
+    stylePropertySections.forEach((stylePropertySection) => {
+      stylePropertySectionText += addStylePropertyMarkdown(stylePropertySection);
     });
     styleSectionText += getStyleTagSectionMarkdown(styleSection.styles, stylePropertySectionText);
   });
@@ -423,7 +397,7 @@ export function getBlockContentMarkdown(block: Object, entityMap: Object): strin
 */
 function getBlockMarkdown(block: Object, entityMap: Object): string {
   const blockMarkdown = [];
-  blockMarkdown.push(getBlockTagSymbol(block.type));
+  blockMarkdown.push(getBlockTagSymbol(block));
   blockMarkdown.push(getBlockContentMarkdown(block, entityMap));
   blockMarkdown.push('\n');
   return blockMarkdown.join('');
@@ -447,4 +421,3 @@ export default function draftToMarkdown(editorContent: ContentState): string {
 
 // todo: fix inline styke ordering for html output also.
 // todo: different way to markdown code if there are multiple blocks of code.
-// todo: fix getSectionText for markdown
