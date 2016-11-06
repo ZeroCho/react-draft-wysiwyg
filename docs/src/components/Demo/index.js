@@ -84,7 +84,7 @@ export default class Demo extends Component {
             toolbarClassName="demo-toolbar"
             wrapperClassName="demo-wrapper"
             editorClassName="demo-editor"
-            onChange={this.onEditorChange}
+            onChange={this.onEditorChange.bind(this, 2)}
             toolbar={{
               image: {
                 uploadCallback: uploadImageCallBack,
@@ -94,7 +94,7 @@ export default class Demo extends Component {
           <textarea
             disabled
             className="demo-content no-focus"
-            value={draftToMarkdown(editorContent)}
+            value={draftToMarkdown(editorContents[2])}
           />
         </div>
         <div className="demo-label">
