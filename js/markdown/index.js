@@ -267,18 +267,20 @@ export function addInlineStyleMarkup(style: string, content: string): string {
 * The method returns markup for section to which inline styles
 * like BOLD, UNDERLINE and ITALIC are applicable.
 */
-function getStyleTagSectionMarkdown(styleSection: Object): string {
-  let text = getSectionText(styleSection.text);
-  forEach(styleSection.styles, (style, value) => {
-    text = addInlineStyleMarkup(style, text, value);
+function getStyleTagSectionMarkdown(styles: string, text: string): string {
+  let content;
+  forEach(styles, (style, value) => {
+    content = addInlineStyleMarkup(style, text, value);
   });
-  return text;
+  return content;
 }
 
 /**
 * Function returns html for text depending on inline style tags applicable to it.
 */
-export function addStylePropertyMarkup(styles: string, content: string): string {
+export function addStylePropertyMarkdown(styleSection: Object): string {
+  const { styles, text } = styleSection;
+  const content = getSectionText(text);
   if (styles && (styles.COLOR || styles.BGCOLOR || styles.FONTSIZE || styles.FONTFAMILY)) {
     let styleString = 'style="';
     if (styles.COLOR) {
@@ -338,7 +340,17 @@ function getEntitySectionMarkdown(block: Object, entityMap: Object, entitySectio
   );
   let styleSectionText = '';
   styleSections.forEach((styleSection) => {
-    styleSectionText += getStyleTagSectionMarkdown(styleSection);
+    const stylePropertySections = getStyleSections(
+      block,
+      ['COLOR', 'FONTSIZE', 'FONTFAMILY'],
+      styleSection.start,
+      styleSection.end
+    );
+    let stylePropertySectionText = '';
+    stylePropertySections.forEach((section) => {
+      stylePropertySectionText += addStylePropertyMarkdown(section);
+    });
+    styleSectionText += getStyleTagSectionMarkdown(styleSection.styles, stylePropertySectionText);
   });
   entitySectionMarkdown.push(styleSectionText);
   let sectionText = entitySectionMarkdown.join('');
